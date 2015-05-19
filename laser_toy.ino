@@ -2,26 +2,46 @@
 #include <Wire.h>
 #include "nunchuck_funcs.h"
 
+// X/Y constants
+const int X = 0;
+const int Y = 1;
+
+//
+// Servo data
+//
+
 // Servo Constants for equipment protection
 const int X_MIN = 0;
 const int X_MAX = 160;
 const int Y_MIN = 0;
 const int Y_MAX = 125;
 
+const int S_MIN[] = {0, 0};
+const int S_MAX[] = {160, 125}; 
+
 // Servo pin assignments
 int x_pin = 6;
 int y_pin = 7;
+const int S_PIN[] = {6, 7};
 
 // Default servo values
 int new_x = 80;
 int new_y = 80;
+int s_center_pos[] = {(S_MIN[X] + S_MAX[X] / 2, S_MIN[Y] + S_MAX[Y] / 2};
 
 // Define Servos
-Servo x, y;
+Servo servo[2];
 
-// Define average nunchuck values
-int avg_x = 120;
-int avg_y = 120;
+//
+// Laser data
+// 
+
+bool laser_on = false;
+const int LASER_PIN = 3;
+
+//
+// Nunchuck data
+//
 
 // Reasonable defaults for minimum and maximum integers for range finding
 int min_y = 40;
@@ -29,22 +49,22 @@ int max_y = 210;
 int min_x = 40;
 int max_x = 210;
 
+int n_min[] = {40, 40};
+int n_max[] = {210, 210};
+
+int n_center_pos[] = {(n_min[X] + n_max[X] / 2, n_min[Y] + n_max[Y] / 2};
+
+int n_delta[] = {0, 0};
+
+// Delta smoothing factor (aka buzzword bingo!)
+const int DELTA_THRESHOLD = 4;
+
 // Button value history for long trigger pulls
 int last_read_c_button, last_read_z_button;
 
-// Laser state
-bool laser_on = false;
-int laser_pin = 3;
+// zoom 
+bool zoom_set = false;
 
-// Trim
-int trim_x = 0;
-int trim_y = 0;
-int remaining_trim_x = 0;
-int remaining_trim_y = 0;
-bool trim_set = false;
-
-// Delta smoothing factor
-const int DELTA_THRESHOLD = 4;
 
 // Initialize Serial, servos and wiichuck communication
 void setup() {
