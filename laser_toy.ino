@@ -16,7 +16,7 @@ const int S_MAX[] = {160, 125};
 const int S_PIN[] = {6, 7};
 
 // Default servo values
-// int s_center_pos[] = {(S_MIN[X] + S_MAX[X]) / 2, (S_MIN[Y] + S_MAX[Y]) / 2};
+int s_current_pos[] = {(S_MIN[X] + S_MAX[X]) / 2, (S_MIN[Y] + S_MAX[Y]) / 2};
 
 // Define Servos
 Servo servo[2];
@@ -36,15 +36,11 @@ const int LASER_PIN = 3;
 int n_min[] = {40, 40};
 int n_max[] = {210, 210};
 
-// Returns the average center of field for the nunchuck
-// Useful for reset
-//int[] avg_n_pos() {
-//  return {(n_min[X] + n_max[X]) / 2, (n_min[Y] + n_max[Y]) / 2};
-//}
+int n_center_pos[] = {(n_min[X] + n_max[X]) / 2, (n_min[Y] + n_max[Y]) / 2};
 
-int n_center_pos[] = {0, 0}; //avg_n_pos();
+int n_current_pos[2];
 
-int n_delta[] = {0, 0};
+//int n_delta[] = {0, 0};
 
 // Delta smoothing factor (aka buzzword bingo!)
 const int DELTA_THRESHOLD = 4;
@@ -77,21 +73,21 @@ void setup() {
 // Write laser state
 // Write servo position
 void loop() {
-
+  
   // Read joystick state
   nunchuck_get_data(); 
 
-  int joy_x = nunchuck_joyx();
-  int joy_y = nunchuck_joyy();
+  n_current_pos[X] = nunchuck_joyx();
+  n_current_pos[Y] = nunchuck_joyy();
   int z_button = nunchuck_zbutton();
   int c_button = nunchuck_cbutton(); 
   
   // Update maximum and minimum values if the joystick exceeds the current bounds
   // Also a hack: the 'chuck seems to send 255 to start out, so I limit to less than 255 for maximum
-  if (joy_x < 255 ) n_max[X] = max(n_max[X], joy_x);
-  n_min[X] = min(n_min[X], joy_x);
-  if (joy_y < 255) n_max[Y] = max(n_max[Y], joy_y);
-  n_min[Y] = min(n_min[Y], joy_y);
+  if (n_current_pos[X] < 255 ) n_max[X] = max(n_max[X], n_current_pos[X]);
+  n_min[X] = min(n_min[X], n_current_pos[X]);
+  if (n_current_pos[Y] < 255) n_max[Y] = max(n_max[Y], n_current_pos[Y]);
+  n_min[Y] = min(n_min[Y], n_current_pos[Y]);
   
   // button routines
   if (c_button > 0 && last_read_c_button == 0) {
@@ -106,22 +102,17 @@ void loop() {
   last_read_z_button = z_button;
   
 
-  
-  // Calulate deltas
-  //int delta_x = (joy_x - avg_x + trim_x);
-  //int delta_y = (joy_y - avg_y + trim_y);
-  
-  // Center dead zone
-  //if (abs(delta_x) < DELTA_THRESHOLD ) delta_x = 0;
-  //if (abs(delta_y) < DELTA_THRESHOLD ) delta_y = 0;
-  
+  update_servo_position();
   
 }
 
-
-//int[] pwm_constraints(int[] coords) {
-//  return {pwm_constraint(coords[x]), pwm_constraint(coords[y])};
-//}
+// Translate the 
+void update_servo_position() {
+  for(int i = X; i <= Y; i++) {
+    s_current_pos[i] = constrain(map(n_current_pos[i], n_min[i], n_max[i], S_MIN[i], S_MAX[i] ), S_MIN[i], S_MAX[i]);
+    servo[i].write(s_current_pos[i]);
+  }  
+}
 
 // Converts degrees to pwm millisecond timings
 // Reverse engineered from http://www.arduino.cc/en/Reference/ServoAttach
