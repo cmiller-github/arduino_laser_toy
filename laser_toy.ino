@@ -11,22 +11,13 @@ const int Y = 1;
 //
 
 // Servo Constants for equipment protection
-const int X_MIN = 0;
-const int X_MAX = 160;
-const int Y_MIN = 0;
-const int Y_MAX = 125;
-
 const int S_MIN[] = {0, 0};
 const int S_MAX[] = {160, 125}; 
 
 // Servo pin assignments
-int x_pin = 6;
-int y_pin = 7;
 const int S_PIN[] = {6, 7};
 
 // Default servo values
-int new_x = 80;
-int new_y = 80;
 int s_center_pos[] = {(S_MIN[X] + S_MAX[X] / 2, S_MIN[Y] + S_MAX[Y] / 2};
 
 // Define Servos
@@ -44,11 +35,6 @@ const int LASER_PIN = 3;
 //
 
 // Reasonable defaults for minimum and maximum integers for range finding
-int min_y = 40;
-int max_y = 210;
-int min_x = 40;
-int max_x = 210;
-
 int n_min[] = {40, 40};
 int n_max[] = {210, 210};
 
@@ -70,27 +56,34 @@ bool zoom_set = false;
 void setup() {
   Serial.begin(9600);
   Serial.println("Ready");
-  x.attach(x_pin);
-  y.attach(y_pin);
   
+  // Attach servos to pins
+  for(int i = X; i <= Y; i++) {
+	  servo[i].attach(S_PIN[i]);
+  }
+  
+  // Invoke nunchuck.h magic
   nunchuck_setpowerpins();
   nunchuck_init();
-  
-  if (x.attached() && y.attached()) {
-    Serial.println("Attached!");
-  } else {
-    Serial.println("NOT ATTACHED!");
-  }
 }
 
-// Do it
+// Read servo position
+// Read joystick position
+// Read button states
+// Calculate...
+// Write laser state
+// Write servo position
 void loop() {
-  // put your main code here, to run repeatedly:
+  
   delay(2);
+
   x.write(x_safe(new_x));
   y.write(y_safe(new_y));
+    for(int i = X; i <= Y; i++) {
+	}
+
   
-  nunchuck_get_data();
+  nunchuck_get_data(); //does this return anything that could speed up getting data into structures?
 
   int joy_x = nunchuck_joyx();
   int joy_y = nunchuck_joyy();
